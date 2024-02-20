@@ -1,0 +1,8 @@
+# Ignore log files and .pyc files
+*.log
+*.pyc
+
+# Ignore the environment and checkpoints
+.git/
+.idea/
+.DS_Store/

@@ -7,7 +7,7 @@ import YearDataForm from './components/YearDataForm.js'
 class App extends React.Component {
     // Change the browser tab title
     componentDidMount() {
-        document.title = 'NHANES Data Explorer';
+        document.title = 'TEBL NHANES Data Explorer';
     }
 
     // renders the header at all stages

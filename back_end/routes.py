@@ -14,7 +14,7 @@ def home():
 
     return render_template('index.html', loaded = str(current_time))
 
-# this route is called by the YearData component to scrape all possible questionnaires
+# this route is called by the YearData componenet to scrape all possible questionnaires
 # the user requested from that year
 @app.route('/YearComp/<string:year>/<string:components>', methods=['GET', 'POST'])
 def YearComp(year, components):
@@ -28,7 +28,10 @@ def YearComp(year, components):
 # for the currently selected questionnaire to display all variables associated with that questionnaire
 @app.route('/SurveyDoc/<string:year>/<string:doc>', methods=['GET', 'POST'])
 def SurveyDoc(year, doc):
-    yearFmt = year + '-' + str(int(year) + 1)
+    if year != 'SpecialCase':
+        yearFmt = year + '-' + str(int(year) + 1)
+    elif year == 'SpecialCase':
+        yearFmt = '2017-2018'
     docFmt = doc.replace(' Doc','.htm')
     result = scrapeDocumentation(yearFmt, docFmt)
 
@@ -38,12 +41,13 @@ def SurveyDoc(year, doc):
 @app.route('/getData/<string:year>/<string:data_file>/<string:var>', methods=['GET','POST'])
 def getData(year, data_file, var):
     result = singleVarDownload(year, data_file, var)
-    
+
     return result
 
-# this route is called to download the single var data
-@app.route('/downloadData/<string:year>/<string:data_file>/<string:var>', methods=['GET', 'POST'])
-def downloadData(year, data_file, var):
+
+# this route is called to request the xpt files hosted on the NHANES website
+@app.route('/getDownload/<string:year>/<string:data_file>/<string:var>', methods=['GET', 'POST'])
+def getDownload(year, data_file, var):
     result = singleVarDownload2Host(year, data_file, var)
 
     return result
@@ -70,4 +74,16 @@ def getDataXYBoxPlot(year, data_file, var):
 
     result = multiVarDownloadBoxPlot(year, data_fileX, varX, data_fileY, varY)
 
+    return result
+
+# this route is called to get an xpt file for an X & Y categorical variables for a cross tab, returns an object
+@app.route('/getCrosstabXY/<string:year>/<string:data_file>/<string:var>', methods=['GET','POST'])
+def getCrosstabXY(year, data_file, var):
+    varX = var.split('-')[0]
+    varY = var.split('-')[1]
+    data_fileX = data_file.split('-')[0]
+    data_fileY = data_file.split('-')[1]
+
+    result = getCrosstabData(year, data_fileX, varX, data_fileY, varY)
+                
     return result

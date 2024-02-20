@@ -13,13 +13,25 @@ class Boxplot extends React.Component{
         this.props.handleLoading()
     }
 
+    filterData() {
+        var data = this.props.logX ? this.props.xData.map(ea => Math.log(ea)) : this.props.xData
+        if(this.props.xMin !== null && this.props.xMin !== ''){
+            data = data.filter(v => v >= this.props.xMin)
+        }
+        if(this.props.xMax !== null && this.props.xMax !== ''){
+            data = data.filter(v => v <= this.props.xMax)
+        }
+
+        return data
+    }
+
     render() {
         return(<Plot
                     data={[
                         {
-                            y: this.props.logX ? this.props.xData.map(ea => Math.log(ea)) : this.props.xData,
+                            y: this.filterData(),
                             type: 'box',
-                            name: `${this.props.sasLabel} (n=${this.props.xData.length})`
+                            name: `${this.props.sasLabel} (n=${this.filterData().length})`
                         }
                     ]}
                     layout={{

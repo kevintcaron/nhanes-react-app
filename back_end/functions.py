@@ -9,52 +9,96 @@ def apiComponentYear(year, questionnaires):
     result_dict = {}
     for q in questionnaires:
         # grab html of page with requests
-        url = f'https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component={q}&CycleBeginYear={year}'
+        if year == 'SpecialCase':
+            url = f'https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component={q}&Cycle=2017-2020'
+        else:
+            url = f'https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component={q}&CycleBeginYear={year}'
         page = requests.get(url)
         extension = 'https://wwwn.cdc.gov/'
+        if year != 'SpecialCase':
+            if page.status_code == 200:
+                # set up empty vars
+                page_dict = {}
 
-        if page.status_code == 200:
-            # set up empty vars
-            page_dict = {}
+                analyte = []
+                doc_file = []
+                doc_file_link = []
+                data_file = []
+                data_file_link = []
+                published = []
 
-            analyte = []
-            doc_file = []
-            doc_file_link = []
-            data_file = []
-            data_file_link = []
-            published = []
+                # pass it to bs4 and parse with lxml
+                content = page.content
+                soup = BeautifulSoup(content, features="lxml")
+                # parse out table and rows and remove header row
+                for row in soup.find('table').find_all('tr')[1:]:
+                    # add each rows data to corresponding list
+                    tds = row.find_all('td')
+                    links = row.find_all('a')
+                    try:
+                        page_dict[tds[0].text] = {
+                            'Analyte': tds[0].text,
+                            'Doc File': tds[1].text,
+                            'Doc Url': extension + links[0]['href'],
+                            'Data File': tds[2].text,
+                            'Data Url': extension + links[1]['href'],
+                            'Published Date': tds[3].text
+                        }
+                    except:
+                        page_dict[tds[0].text] = {
+                            'Analyte': tds[0].text,
+                            'Doc File': tds[1].text,
+                            'Doc Url': 'No URL',
+                            'Data File': tds[2].text,
+                            'Data Url': 'No URL',
+                            'Published Date': tds[3].text
+                        }
 
-            # pass it to bs4 and parse with lxml
-            content = page.content
-            soup = BeautifulSoup(content, features="lxml")
-            # parse out table and rows and remove header row
-            for row in soup.find('table').find_all('tr')[1:]:
-                # add each rows data to corresponding list
-                tds = row.find_all('td')
-                links = row.find_all('a')
-                try:
-                    page_dict[tds[0].text] = {
-                        'Analyte': tds[0].text,
-                        'Doc File': tds[1].text,
-                        'Doc Url': extension + links[0]['href'],
-                        'Data File': tds[2].text,
-                        'Data Url': extension + links[1]['href'],
-                        'Published Date': tds[3].text
-                    }
-                except:
-                    page_dict[tds[0].text] = {
-                        'Analyte': tds[0].text,
-                        'Doc File': tds[1].text,
-                        'Doc Url': 'No URL',
-                        'Data File': tds[2].text,
-                        'Data Url': 'No URL',
-                        'Published Date': tds[3].text
-                    }
+                result_dict[q] = page_dict
+            else:
+                result_dict[q] = 'Could not reach {}'.format(url)
+        elif year == 'SpecialCase':
+            if page.status_code == 200:
+                # set up empty vars
+                page_dict = {}
 
-            result_dict[q] = page_dict
+                analyte = []
+                doc_file = []
+                doc_file_link = []
+                data_file = []
+                data_file_link = []
+                published = []
 
-        else:
-            result_dict[q] = 'Could not reach {}'.format(url)
+                # pass it to bs4 and parse with lxml
+                content = page.content
+                soup = BeautifulSoup(content, features="lxml")
+                # parse out table and rows and remove header row
+                for row in soup.find('table').find_all('tr')[1:]:
+                    # add each rows data to corresponding list
+                    tds = row.find_all('td')
+                    links = row.find_all('a')
+                    try:
+                        page_dict[tds[1].text] = {
+                            'Analyte': tds[1].text,
+                            'Doc File': tds[2].text,
+                            'Doc Url': extension + links[0]['href'],
+                            'Data File': tds[3].text,
+                            'Data Url': extension + links[1]['href'],
+                            'Published Date': tds[4].text
+                        }
+                    except:
+                        page_dict[tds[1].text] = {
+                            'Analyte': tds[1].text,
+                            'Doc File': tds[2].text,
+                            'Doc Url': 'No URL',
+                            'Data File': tds[3].text,
+                            'Data Url': 'No URL',
+                            'Published Date': tds[4].text
+                        }
+
+                result_dict[q] = page_dict
+            else:
+                result_dict[q] = 'Could not reach {}'.format(url)
     return result_dict
 
 
@@ -106,8 +150,11 @@ def scrapeDocumentation(year, doc):
 
 def singleVarDownload(year, file_name, var):
     # format doc url
-    year = year + '-' + str(int(year) + 1)
-    url = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{file_name}.XPT'
+    if year != 'SpecialCase':
+        year = year + '-' + str(int(year) + 1)
+        url = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{file_name}.XPT'
+    elif year == 'SpecialCase':
+        url = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{file_name}.XPT'
 
     # download the xpt file, and convert to DataFrame
     download = requests.get(url).content
@@ -119,13 +166,16 @@ def singleVarDownload(year, file_name, var):
 
     df = df.to_json()
     parsed = json.loads(df)
-    
+
     return parsed
 
 def singleVarDownload2Host(year, file_name, var):
     # format doc url
-    year = year + '-' + str(int(year) + 1)
-    url = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{file_name}.XPT'
+    if year != 'SpecialCase':
+        year = year + '-' + str(int(year) + 1)
+        url = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{file_name}.XPT'
+    elif year == 'SpecialCase':
+        url = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{file_name}.XPT'
 
     # download the xpt file, and convert to DataFrame
     download = requests.get(url).content
@@ -135,14 +185,19 @@ def singleVarDownload2Host(year, file_name, var):
     df = df[['SEQN', var]].dropna(axis=0, how='any')
     df = df[df[var] != 5.397605346934028e-79]
 
-    csv = df.to_csv()
+    df = df.to_json()
+    parsed = json.loads(df)
 
-    return csv
+    return parsed
 
 def multiVarDownload(year, fileX, varX, fileY, varY):
-    year = year + '-' + str(int(year) + 1)
-    urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileX}.XPT'
-    urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileY}.XPT'
+    if year != 'SpecialCase':
+        year = year + '-' + str(int(year) + 1)
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileY}.XPT'
+    elif year == 'SpecialCase':
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileY}.XPT'
     
     downloadX = requests.get(urlX).content
     with open('Data/testX.xpt', 'wb') as fX:
@@ -165,9 +220,13 @@ def multiVarDownload(year, fileX, varX, fileY, varY):
     return parsed
 
 def multiVarDownloadBoxPlot(year, fileX, varX, fileY, varY):
-    year = year + '-' + str(int(year) + 1)
-    urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileX}.XPT'
-    urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileY}.XPT'
+    if year != 'SpecialCase':
+        year = year + '-' + str(int(year) + 1)
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileY}.XPT'
+    elif year == 'SpecialCase':
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileY}.XPT'
     
     downloadX = requests.get(urlX).content
     with open('Data/testX.xpt', 'wb') as fX:
@@ -183,10 +242,48 @@ def multiVarDownloadBoxPlot(year, fileX, varX, fileY, varY):
     dfY = dfY[dfY[varY] != 5.397605346934028e-79]
     
     dfMerged = dfX.merge(dfY, on='SEQN', how='inner')
-    
     result = {}
     cats = set(dfMerged[varX])
     for cat in cats:
         result[cat] = list(dfMerged[dfMerged[varX] == cat][varY])
+
+    
+    return result
+
+def getCrosstabData(year, fileX, varX, fileY, varY):
+    if year != 'SpecialCase':
+        year = year + '-' + str(int(year) + 1)
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/{year}/{fileY}.XPT'
+    elif year == 'SpecialCase':
+        urlX = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileX}.XPT'
+        urlY = f'https://wwwn.cdc.gov//Nchs/Nhanes/2017-2018/{fileY}.XPT'
+    
+    downloadX = requests.get(urlX).content
+    with open('Data/testX.xpt', 'wb') as fX:
+        fX.write(downloadX)
+    dfX = pd.read_sas('Data/testX.xpt')
+    dfX = dfX[['SEQN', varX]].dropna(axis=0, how='any')
+    dfX = dfX[dfX[varX] != 5.397605346934028e-79]
+    
+    downloadY = requests.get(urlY).content
+    with open('Data/testY.xpt', 'wb') as fY:
+        fY.write(downloadY)
+    dfY = pd.read_sas('Data/testY.xpt')
+    dfY = dfY[['SEQN', varY]].dropna(axis=0, how='any')
+    dfY = dfY[dfY[varY] != 5.397605346934028e-79]
+    
+    dfMerged = dfX.merge(dfY, on='SEQN', how='inner')
+    
+    cross = pd.crosstab(dfMerged[varX], dfMerged[varY],margins=True)
+    
+    result = {
+        'Columns': [],
+        'Rows': []
+    }
+    result['Columns'] = list(cross.columns)
+    for row in range(len(cross)):
+        result['Rows'].append([cross.iloc[row].name] + list(cross.iloc[row]))
+    
     
     return result

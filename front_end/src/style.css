@@ -2,3 +2,6 @@
     border-top: 2px solid black;
 }
 
+#boldTD {
+    font-weight: bold;
+}

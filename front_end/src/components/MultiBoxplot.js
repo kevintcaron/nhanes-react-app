@@ -13,6 +13,19 @@ class MultiBoxplot extends React.Component{
         this.props.handleLoading()
     }
 
+    filterData(value) {
+
+        var data = this.props.logY ? value.map(ea => Math.log(ea)) : value
+        if(this.props.yMin !== null && this.props.yMin !== ''){
+            data = data.filter(v => v >= this.props.yMin)
+        }
+        if(this.props.yMax !== null && this.props.yMax !== ''){
+            data = data.filter(v => v <= this.props.yMax)
+        }
+    
+        return data
+    }
+
     render() {
         let labels = null
         for(let i = 0; i < this.props.catLabels.length; i++) {
@@ -38,23 +51,21 @@ class MultiBoxplot extends React.Component{
         let dataList = []
         for (const [key, value] of Object.entries(this.props.data)) {
             dataList.push({
-                y: this.props.logY ? value.map(ea => Math.log(ea)) : value,
+                y: this.filterData(value),
                 type: 'box',
-                name: `${label_values[testKey(key)]} (n=${value.length})`
-              
-                
+                name: `${label_values[testKey(key)]} (n=${this.filterData(value).length})`
             })
         }
 
         return(
-            <Plot
+            <Plot style={{width: '100%'}}
                     data={dataList}
                     layout={{
                         title: this.props.title,
                         xaxis: {title: this.props.xAxis}, 
                         yaxis: {title: this.props.yAxis},
                         height:700,
-                        width:1100
+                       // width:1100
                         }}
     
                 />

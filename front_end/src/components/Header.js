@@ -10,13 +10,16 @@ function Header() {
             <h1 className='text-center'>
                 Welcome to the TEBL NHANES Data Analysis Tool
             </h1>
+            <p className='text-center'>
+                <u>*** This application is still being developed and the data and 
+                figures generated from this should not be used in publications ***</u>
+            </p>
             <p className='text-center'>To view official NHANES documentation for 
                 specific years and or survey questions click 
                 <b><a href="https://wwwn.cdc.gov/nchs/nhanes/Default.aspx" target="_blank" rel="noreferrer"> here.</a></b>
             </p>
-            <p>
-              To start exploring NHANES data, you will need to select both a survey year, 
-              and the type of data (questionnaire) that you want to explore.
+            <p className='text-center'>
+              To start exploring NHANES data, you will need to select a survey year that you want to explore.
             </p>
             <div className='col-sm text-center'>
                 <button 

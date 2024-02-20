@@ -52,7 +52,8 @@ class VariableSelectForm extends React.Component{
 
             buttonDisplay:false,
             displayWarning:false,
-            displayVis:false
+            displayVis:false,
+            freqTableData: {}
         }
         // binding functions
         this.handleDropdown1 = this.handleDropdown1.bind(this)
@@ -69,6 +70,7 @@ class VariableSelectForm extends React.Component{
         this.props.handleLoading()
         // taking the data that was passed from the last component and making the html options for the first dropdown and storing them in state.dropdown1
         const selectedQuestionnaires = Object.keys(this.props.results)
+        console.log(this.props.results)
         const dropdownQuestionnaires = selectedQuestionnaires.map(ea => <option key={ea} value={ea}>{ea}</option>)
         this.setState({dropdown1:{
             options: dropdownQuestionnaires
@@ -95,7 +97,7 @@ class VariableSelectForm extends React.Component{
         })
         // making dropdown options for dropdown2 and storing them in state
         const surveys = Object.keys(this.props.results[event.target.value])
-        const surveyOptions = surveys.map(ea => <option key={ea} value={ea}>{ea.substring(0,70)}</option>)
+        const surveyOptions = surveys.map(ea => <option key={ea} value={ea}>{ea.substring(0,80)}</option>)
         this.setState({
             dropdown2: {
                 options:surveyOptions,
@@ -203,7 +205,12 @@ class VariableSelectForm extends React.Component{
                         categoricalVars:prevState.categoricalVars.concat(this.state.variable),
                         categoricalVarsLabels: prevState.categoricalVarsLabels.concat({
                             [this.state.variable]: this.state.variableTable.data.data}
-                        )
+                        ),
+                        freqTableData: {
+                            ...prevState.freqTableData,
+                            [this.state.variable]: this.state.variableTable.data
+
+                        }
                     }
                 })
             }
@@ -238,7 +245,8 @@ class VariableSelectForm extends React.Component{
     
     render() {
         return(
-            <div>
+            <div className='container-fluid'>
+            {/* ch */}
                 {this.state.display ? <div className='container'>
                     <div className='row'>
                         {this.state.displayWarning ? <div className='container-fluid'>
@@ -249,7 +257,10 @@ class VariableSelectForm extends React.Component{
                     </div>
                     <div className='row'>
                         <div className='col-sm'>
-                            <p><b>Selected Year:</b> {this.props.year}-{parseInt(this.props.year) + 1}</p>
+                            {(this.props.year !== 'SpecialCase') ?
+                            <p><b>Selected Year:</b> {this.props.year}-{parseInt(this.props.year) + 1}</p> : 
+                            <p><b>Selected Year:</b> 2017 - March 2020 Pre-Covid </p>
+                            }
                         </div>
                     </div>
                     <div className='row'>
@@ -331,7 +342,7 @@ class VariableSelectForm extends React.Component{
                     <div className='row text-center'>
                         <div className='col'></div>
                         <div className='col-7'>
-                            {this.state.variableTable.display ? <VariableTable data={this.state.variableTable.data}/>: null}
+                            {this.state.variableTable.display ? <VariableTable data={this.state.variableTable.data} check={0}/>: null}
                         </div>
                         <div className='col'></div>
                     </div>
@@ -347,6 +358,7 @@ class VariableSelectForm extends React.Component{
                                      continuousVars={this.state.continuousVars}
                                      categoricalVars={this.state.categoricalVars}
                                      categoricalLabels={this.state.categoricalVarsLabels}
+                                     freqTableData={this.state.freqTableData}
                         />
                     </div> : null}
             </div>

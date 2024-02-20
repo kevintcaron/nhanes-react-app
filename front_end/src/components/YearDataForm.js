@@ -33,13 +33,19 @@ class YearDataForm extends React.Component {
     }
 
     handleClick(){
-        if(this.state.year !== ''){
+        if(this.state.year !== '' && this.state.year !== 'SpecialCase'){
             this.setState({displayAlert: false})
             fetch(`YearComp/${this.state.year}/Demographics-Dietary-Examination-Laboratory-Questionnaire`)
             .then(response => response.json()).then(data => {this.setState({results:data})})
             this.setState({displayLoading:true})
             
-        } else {
+        } else if(this.state.year !== '' && this.state.year === 'SpecialCase'){
+            this.setState({displayAlert: false})
+            fetch(`YearComp/${this.state.year}/Demographics-Examination-Laboratory-Questionnaire`)
+            .then(response => response.json()).then(data => {this.setState({results:data})})
+            this.setState({displayLoading:true})
+        }
+        else {
             this.setState({displayAlert: true})
 
         }
@@ -48,10 +54,17 @@ class YearDataForm extends React.Component {
     render() {
         // Constants for year dropdowns
         const years = [
+            ['1999', '1999-2000'],
+            ['2001', '2001-2002'],
+            ['2003', '2003-2004'],
+            ['2005', '2005-2006'],
+            ['2007', '2007-2008'],
+            ['2009', '2009-2010'],
             ['2011', '2011-2012'],
             ['2013', '2013-2014'],
             ['2015', '2015-2016'],
-            ['2017', '2017-2018']
+            ['2017', '2017-2018'],
+            ['SpecialCase', '2017 - March 2020']
         ]
         // mapping each list into dropdown html
         const yearsOptions = years.map(ea => <option key={ea[0]} value={ea[0]}>{ea[1]}</option>)

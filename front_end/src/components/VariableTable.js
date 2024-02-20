@@ -7,11 +7,22 @@ function VariableTable(props) {
     } else {
         // creating table html
         console.log(props.data)
-        let headers = new Array(props.data.columns.map(ea => <th key={ea}>{ea}</th>))
-        let rows = new Array(props.data.data.map(row => 
-                                    <tr key={row}>
-                                         {row.map(entry => <td key={Math.random()}> {entry }</td>)}   
-                                    </tr>))
+        console.log(props.check)
+        
+
+        let headers = (props.check === 1) ? 
+            new Array(props.data.columns.slice(0,-1).map(ea => <th key={ea}>{ea}</th>)) :
+            new Array(props.data.columns.map(ea => <th key={ea}>{ea}</th>))
+
+        let rows = (props.check === 1) ? new Array(props.data.data.map(row => 
+                                            <tr key={row}>
+                                                {row.slice(0,-1).map(entry => <td key={Math.random()}> {entry }</td>)}   
+                                            </tr>)) :
+                                        new Array(props.data.data.map(row => 
+                                            <tr key={row}>
+                                                {row.map(entry => <td key={Math.random()}> {entry }</td>)}   
+                                            </tr>))
+
         
         // structuring the information into a html table
         return <table className='table table-bordered'>
